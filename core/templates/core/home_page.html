@@ -1,0 +1,61 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Головна сторінка — Зустрічі{% endblock %}
+
+{% block content %}
+    <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-4">
+        <h1 class="display-6 fw-bold text-dark m-0">Активні зустрічі</h1>
+        {% if request.user.is_authenticated %}
+            <a href="{% url 'create_proposal' %}" class="btn btn-primary mt-3 mt-sm-0 shadow-sm">
+                Створити зустріч
+            </a>
+        {% endif %}
+    </div>
+    <hr class="text-muted">
+
+    {% if proposals %}
+        <div class="row g-4 mt-2">
+            {% for proposal in proposals %}
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="card h-100 shadow-sm border-0 bg-light">
+                        <div class="card-body d-flex flex-column justify-content-between p-4">
+                            <div>
+                                <h5 class="card-title fw-bold text-dark mb-3">{{ proposal.title }}</h5>
+
+                                <p class="card-text text-muted small mb-2">
+                                    <strong>Організатор:</strong> <span >@{{ proposal.creator.username }}</span>
+                                </p>
+
+                                <p class="card-text text-dark small mb-2">
+                                    <strong>Місце:</strong>
+                                    {% if proposal.venue %}
+                                        <span class="text-dark">{{ proposal.venue.name }}</span>
+                                    {% else %}
+                                        <span class="text-muted fst-italic">Не вказано</span>
+                                    {% endif %}
+                                </p>
+
+                                <p class="card-text text-dark small mb-0">
+                                    <strong>Коли:</strong>
+                                    <span class="text-success fw-bold">
+                                        {{ proposal.proposed_time|date:"d.m.Y в H:i" }}
+                                    </span>
+                                </p>
+                            </div>
+
+                            <div class="mt-4">
+                                <a href="{% url 'proposal_details' proposal.id %}" class="btn btn-outline-success w-100 fw-bold">
+                                    Переглянути деталі
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-info text-center py-4 my-4" role="alert">
+            Наразі немає активних зустрічей. Станьте першим, хто організує подійку!
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,145 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Мій профіль — MeetUp{% endblock %}
+
+{% block content %}
+<div class="p-4 bg-white border border-dark mb-4">
+    <div class="d-flex align-items-center gap-3">
+        <div class="d-flex align-items-center justify-content-center fw-bold text-white fs-3 border border-dark"
+             style="width: 64px; height: 64px; background: var(--sego-gradient); user-select: none;">
+            {{ request.user.username|slice:":1"|upper }}
+        </div>
+        <div>
+            <h2 class="h4 fw-bold text-dark m-0">@{{ request.user.username }}</h2>
+            <div class="d-flex align-items-center gap-3 mt-1">
+                <span class="text-success fw-bold small text-uppercase tracking-wider">★ Рейтинг: {{ request.user.get_rating }}</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mb-4 d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+    <a href="?filter=all" class="btn btn-sm {% if current_filter == 'all' or not current_filter %}btn-dark{% else %}btn-outline-dark{% endif %} text-uppercase tracking-wider fw-bold px-4 py-2">Усі записи</a>
+    <a href="?filter=active" class="btn btn-sm {% if current_filter == 'active' %}btn-success{% else %}btn-outline-success{% endif %} text-uppercase tracking-wider fw-bold px-4 py-2">Активні</a>
+    <a href="?filter=closed" class="btn btn-sm {% if current_filter == 'closed' %}btn-secondary{% else %}btn-outline-secondary{% endif %} text-uppercase tracking-wider fw-bold px-4 py-2">Завершені</a>
+</div>
+
+<div class="row g-4">
+
+    <div class="col-12 col-lg-6">
+        <h5 class="text-uppercase text-secondary fw-bold small tracking-wider mb-2">Організовані зустрічі ({% if my_created_proposals %}{{ my_created_proposals.count }}{% else %}0{% endif %})</h5>
+        <hr class="border-dark opacity-100 mb-4">
+
+        {% if my_created_proposals %}
+            <div class="d-flex flex-column gap-3">
+                {% for proposal in my_created_proposals %}
+                    <div class="p-3 bg-white border border-dark border-start border-dark border-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1" style="font-size: 1.05rem;">{{ proposal.title }}</h6>
+                                <div class="text-muted extra-small d-flex flex-column gap-1" style="font-size: 0.85rem;">
+                                    <span>Дата: {{ proposal.proposed_time|date:"d.m.Y в H:i" }}</span>
+                                    {% if proposal.status == 'active' %}
+                                        <span class="text-success fw-bold text-uppercase tracking-wider extra-small">Статус: Активне</span>
+                                    {% else %}
+                                        <span class="text-secondary text-uppercase tracking-wider extra-small">Статус: Закрите</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <a href="{% url 'proposal_details' proposal.id %}" class="btn btn-sm btn-outline-dark fw-bold text-uppercase tracking-wider px-3 py-2" style="font-size: 0.75rem;">Керувати</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 bg-white border border-dark">
+                <p class="text-muted m-0 small text-uppercase tracking-wider fw-bold">Немає записів для обраного фільтра</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <h5 class="text-uppercase text-secondary fw-bold small tracking-wider mb-2">Заплановані візити ({% if my_joined_apps %}{{ my_joined_apps.count }}{% else %}0{% endif %})</h5>
+        <hr class="border-dark opacity-100 mb-4">
+
+        {% if my_joined_apps %}
+            <div class="d-flex flex-column gap-3">
+                {% for app in my_joined_apps %}
+                    <div class="p-3 bg-white border border-dark border-start border-success border-3">
+                        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                            <div>
+                                <h6 class="fw-bold text-dark mb-1" style="font-size: 1.05rem;">{{ app.proposal.title }}</h6>
+                                <div class="text-muted extra-small" style="font-size: 0.85rem;">
+                                    <span class="d-block">Організатор: <strong class="text-dark">@{{ app.proposal.creator.username }}</strong> <span class="text-success fw-bold">(★ {{ app.proposal.creator.get_rating }})</span></span>
+                                    <span class="d-block mt-1">Дата: {{ app.proposal.proposed_time|date:"d.m.Y в H:i" }}</span>
+                                </div>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'proposal_details' app.proposal.id %}" class="btn btn-sm btn-outline-secondary fw-bold text-uppercase tracking-wider px-3 py-2" style="font-size: 0.75rem;">Деталі</a>
+                                <a href="{% url 'proposal_chat' app.proposal.id %}" class="btn btn-sm btn-primary fw-bold text-uppercase tracking-wider px-3 py-2" style="font-size: 0.75rem;">Чат</a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 bg-white border border-dark">
+                <p class="text-muted m-0 small text-uppercase tracking-wider fw-bold">Немає записів для обраного фільтра</p>
+            </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<div class="row g-4 mt-5 pt-4 border-top border-light">
+    <div class="col-12 col-md-4">
+        <h5 class="text-uppercase text-secondary fw-bold small tracking-wider mb-2">Запити в друзі ({{ friend_requests.count }})</h5>
+        <hr class="border-dark opacity-100 mb-3">
+
+        {% if friend_requests %}
+            <div class="d-flex flex-column gap-2">
+                {% for req in friend_requests %}
+                    <div class="p-3 bg-white border border-dark d-flex justify-content-between align-items-center">
+                        <span class="fw-bold text-dark small">@{{ req.creator.username }}</span>
+                        <div class="d-flex gap-2">
+                            <a href="{% url 'accept_friend_request' req.id %}" class="btn btn-sm btn-success fw-bold text-uppercase tracking-wider py-1 px-2" style="font-size: 0.65rem;">Прийняти</a>
+                            <a href="{% url 'reject_or_remove_friend' req.id %}" class="btn btn-sm btn-outline-dark fw-bold text-uppercase tracking-wider py-1 px-2" style="font-size: 0.65rem;">✕</a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted extra-small text-uppercase tracking-wider my-3 fw-medium">Нових запитів немає</p>
+        {% endif %}
+    </div>
+
+    <div class="col-12 col-md-8">
+        <h5 class="text-uppercase text-secondary fw-bold small tracking-wider mb-2">Мої друзі ({{ active_friendships.count }})</h5>
+        <hr class="border-dark opacity-100 mb-3">
+
+        {% if active_friendships %}
+            <div class="row g-2">
+                {% for friendship in active_friendships %}
+                    <div class="col-12 col-sm-6">
+                        <div class="p-3 bg-white border border-dark d-flex justify-content-between align-items-center">
+                            <span class="fw-bold text-dark small">
+                                {% if friendship.creator == request.user %}
+                                    @{{ friendship.friend.username }}
+                                {% else %}
+                                    @{{ friendship.creator.username }}
+                                {% endif %}
+                            </span>
+                            <a href="{% url 'reject_or_remove_friend' friendship.id %}" class="text-danger small fw-bold text-decoration-none text-uppercase tracking-wider" style="font-size: 0.65rem;">
+                                Видалити
+                            </a>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p class="text-muted extra-small text-uppercase tracking-wider my-3 fw-medium">Ваш список друзів поки що порожній</p>
+        {% endif %}
+    </div>
+
+</div>
+{% endblock %}

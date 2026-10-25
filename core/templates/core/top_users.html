@@ -1,0 +1,49 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Лідерборд спільноти — MeetUp{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <h2 class="fw-bold text-dark text-uppercase tracking-tight small" style="font-size: 1.3rem;">
+         ТОП-10 УЧАСНИКІВ СПІЛЬНОТИ
+    </h2>
+    <p class="text-muted small text-uppercase tracking-wider">Найкращі організатори та гості за відгуками користувачів</p>
+</div>
+
+<div class="table-responsive border border-dark bg-white">
+    <table class="table table-hover align-middle m-0 text-center">
+        <thead class="table-light border-bottom border-dark">
+            <tr class="text-uppercase tracking-wider small fw-bold text-secondary" style="font-size: 0.75rem;">
+                <th style="width: 80px;" class="py-3">Місце</th>
+                <th class="text-start py-3">Користувач</th>
+                <th style="width: 150px;" class="py-3">Середній бал</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for leader in leaders %}
+                <tr class="border-bottom border-light">
+                    <td class="fw-bold text-dark py-3">
+                        {% if forloop.counter == 1 %} 1
+                        {% elif forloop.counter == 2 %} 2
+                        {% elif forloop.counter == 3 %} 3
+                        {% else %}{{ forloop.counter }}{% endif %}
+                    </td>
+
+                    <td class="text-start fw-semibold text-dark py-3">
+                        @{{ leader.username }}
+                        {% if leader == request.user %}
+                            <span class="badge bg-success-subtle text-success border border-success extra-small ms-1 text-uppercase tracking-wider" style="font-size: 0.6rem;">Це ви</span>
+                        {% endif %}
+                    </td>
+
+                    <td class="py-3">
+                        <span class="fw-bold text-success">
+                            ★ {{ leader.avg_rating|floatformat:1 }}
+                        </span>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

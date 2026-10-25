@@ -1,0 +1,110 @@
+{% extends 'core/base.html' %}
+
+{% block title %}Створити оголошення — MeetUp{% endblock %}
+
+{% block content %}
+<h1 class="display-6 fw-bold text-dark mb-4">Створення нової зустрічі 📝</h1>
+    <hr class="text-muted">
+
+    <form method="POST">
+        {% csrf_token %}
+        
+        <div class="mb-4 text-dark row-gap-3 d-flex flex-column">
+            {{ form.as_p }}
+        </div>
+
+        <h4 class="fw-bold text-secondary mt-5 mb-3">📍 Локація зустрічі</h4>
+        
+        <div class="mb-3 position-relative">
+            <label for="venue-search" class="form-label fw-bold text-muted">Пошук закладу або адреси:</label>
+            <input type="text" id="venue-search" class="form-control form-control-lg" placeholder="Почніть вводити: Пузата хата, Кінотеатр Жовтень..." autocomplete="off">
+            
+            <div id="search-results" class="list-group position-absolute w-100 shadow-sm" style="z-index: 1050; max-height: 250px; overflow-y: auto;"></div>
+        </div>
+
+        <input type="hidden" id="venue-name" name="venue_name">
+        <input type="hidden" id="venue-address" name="venue_address">
+
+        <hr class="text-muted my-4">
+
+        <div class="d-flex gap-3 align-items-center mt-4">
+            <button type="submit" class="btn btn-success btn-lg fw-bold shadow-sm px-4">Опублікувати оголошення</button>
+            <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-lg px-4">Скасувати</a>
+        </div>
+    </form>
+
+
+<script>
+
+document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.getElementById('venue-search');
+    const resultsContainer = document.getElementById('search-results');
+    const hiddenName = document.getElementById('venue-name');
+    const hiddenAddress = document.getElementById('venue-address');
+
+    searchInput.addEventListener('input', function() {
+        const query = searchInput.value.trim();
+        console.log("Введено текст для пошуку:", query); // <-- ДІАГНОСТИКА
+
+        if (query.length < 3) {
+            resultsContainer.innerHTML = '';
+            return;
+        }
+
+        const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&limit=5`;
+        console.log("Надсилаємо запит на URL:", url); // <-- ДІАГНОСТИКА
+
+        fetch(url)
+            .then(response => {
+                console.log("Відповідь від сервера отримана, статус:", response.status); // <-- ДІАГНОСТИКА
+                return response.json();
+            })
+            .then(data => {
+                console.log("Дані з карти успішно розпарсено:", data); // <-- ДІАГНОСТИКА
+                resultsContainer.innerHTML = '';
+
+                if (data.features && data.features.length > 0) {
+                    data.features.forEach(feature => {
+                        const props = feature.properties;
+                        const name = props.name || props.street || 'Цікаве місце';
+
+                        const addressParts = [];
+                        if (props.city) addressParts.push(props.city);
+                        if (props.street) {
+                            let streetStr = props.street;
+                            if (props.housenumber) streetStr += ' ' + props.housenumber;
+                            addressParts.push(streetStr);
+                        }
+                        const fullAddress = addressParts.join(', ') || props.country || 'Адреса відсутня';
+
+                        const item = document.createElement('button');
+                        item.type = 'button';
+                        item.className = 'list-group-item list-group-item-action text-start py-2';
+                        item.innerHTML = `<strong>${name}</strong><br><small class="text-muted">${fullAddress}</small>`;
+
+                        item.addEventListener('click', function() {
+                            searchInput.value = `${name} (${fullAddress})`;
+                            hiddenName.value = name;
+                            hiddenAddress.value = fullAddress;
+                            resultsContainer.innerHTML = '';
+                        });
+
+                        resultsContainer.appendChild(item);
+                    });
+                } else {
+                    console.log("Сервер повернув порожній список місць."); // <-- ДІАГНОСТИКА
+                }
+            })
+            .catch(error => {
+                console.error('Помилка виконання fetch-запиту:', error); // <-- ТУТ БУДЕ КРИТИЧНА ПОМИЛКА
+            });
+    });
+
+    document.addEventListener('click', function(e) {
+        if (e.target !== searchInput) {
+            resultsContainer.innerHTML = '';
+        }
+    });
+});
+</script>
+{% endblock %}
